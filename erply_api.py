@@ -72,6 +72,7 @@ class Erply(object):
         # TODO: This list is still incomplete
         'getAddresses',
         'getAddressTypes',
+        'getBrands',
         'getCustomers',
         'getCustomerGroups',
         # 'getDocuments'       Unimplemented from ERPLY side :(
@@ -94,6 +95,7 @@ class Erply(object):
     ERPLY_CSV = ('getProductStockCSV', 'getSalesReport')
     ERPLY_POST = (
         'saveAddress',
+        'saveBrand',
         'saveCustomer',
         'saveCustomerGroup',
         'saveInventoryRegistration',
@@ -113,9 +115,9 @@ class Erply(object):
         'saveWarehouse',
     )
 
-    def __init__(self, auth, erply_api_url=None, wait_on_limit=False):
+    def __init__(self, auth, erply_api_url=None, wait_on_limit=False, session_key=None):
         self.auth = auth
-        self._session_key = None
+        self._session_key = session_key
 
         # Whether to wait for next hour when API limit has been met.
         # When False, ErplyAPILimitException will be raised, otherwise
