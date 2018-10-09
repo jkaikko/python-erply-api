@@ -361,7 +361,11 @@ class ErplyResponse(object):
         """Get the first record, if only one exists."""
         if self.total == 1:
             return self.records[0][0]
-        raise ValueError
+        elif self.total == 0:
+            raise ErplyException('Request returned no results')
+        else:
+            raise ErplyException(
+                'Request returned more than 1 result ({})'.format(self.total))
 
     def fetch_records(self, page):
         """Get a specific page of results from erply."""
