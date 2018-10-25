@@ -13,6 +13,7 @@ from datetime import datetime
 from time import sleep
 import csv
 import requests
+from requests.exceptions import RequestException
 
 import logging
 
@@ -115,8 +116,12 @@ class Erply(object):
         'saveWarehouse',
     )
 
-    def __init__(self, auth, erply_api_url=None, wait_on_limit=False, session_key=None):
+    def __init__(self, auth, erply_api_url=None, wait_on_limit=False,
+                 session_key=None, error_retry_delay=2):
         self.auth = auth
+
+        # Set _session_key via kwarg. This allows caching the session_key
+        # to avoid the initial authentication call.
         self._session_key = session_key
 
         # Whether to wait for next hour when API limit has been met.
@@ -126,6 +131,10 @@ class Erply(object):
 
         # User-specified Erply API url
         self.erply_api_url = erply_api_url
+
+        # Set the default error retry delay. This is used when encountering a 
+        # RequestException
+        self.error_retry_delay = error_retry_delay
 
     @property
     def _payload(self):
@@ -172,7 +181,16 @@ class Erply(object):
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
         logger.debug('Erply request %s', data.get('request'))
-        resp = requests.post(self.api_url, data=data, headers=headers)
+
+        try:
+            resp = requests.post(self.api_url, data=data, headers=headers)
+        except RequestException:
+            # This might be, for example, a ConnectionError.
+            # Sleep a while and then retry once. If it raises the same error,
+            # it probably isn't an error that goes away by retrying.
+            if self.error_retry_delay:
+                sleep(self.error_retry_delay)
+            resp = requests.post(self.api_url, data=data, headers=headers)
 
         if resp.status_code != requests.codes.ok:
             raise ErplyException('Request failed with error {}'.format(
