@@ -78,6 +78,7 @@ class Erply(object):
         'getCustomerGroups',
         # 'getDocuments'       Unimplemented from ERPLY side :(
         'getEmployees',
+        'getPayments',
         'getProducts',
         'getProductCategories',
         'getProductCostForSpecificAmount',  # untested
