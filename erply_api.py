@@ -352,7 +352,20 @@ class ErplyBulkRequest(object):
         _requests = []
         for n, request in enumerate(self.calls, start=1):
             _call, _args, _kwargs = request
-            _kwargs.update(requestID=n)
+
+            # Do not force update requestID, in case one wants to act on
+            # the results. Bulk creation of products for example returns
+            # [{u'id': <erply pid>, u'productID': <erply pid>}] as records,
+            # so it's pretty much impossible to act on it, unless we can match
+            # it to a specific requestID in the bulk request.
+            #
+            # Note that, if one only supplies requestID for certain requests,
+            # there might be requestID clashes, since the update function
+            # below does not check if the enumerate-based id is actually
+            # unique to this bulk request.
+            if 'requestID' not in _kwargs:
+                _kwargs.update(requestID=n)
+
             _requests.append(_call(*_args, **_kwargs))
         return self.erply.handle_bulk(self.json_dumper(_requests))
 
